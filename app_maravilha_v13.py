@@ -88,6 +88,10 @@ df = pd.read_sql_query(
 
 conn.close()
 
+st.write("TOTAL REGISTROS BANCO:", len(df))
+st.write("ULTIMO REGISTRO:", df.iloc[-1]["artista"], "-", df.iloc[-1]["musica"])
+st.write("ULTIMO TIMESTAMP:", df.iloc[-1]["timestamp"])
+
 if len(df) == 0:
 
     st.warning(
