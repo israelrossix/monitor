@@ -215,10 +215,10 @@ df = df[
 # INDICADORES
 # ==========================================
 
-hoje = pd.Timestamp.now().normalize()
+hoje = pd.Timestamp.now().date()
 
 df_hoje = df[
-    df["timestamp"] >= hoje
+    df["timestamp"].dt.date == hoje
 ]
 
 artistas_unicos = (
