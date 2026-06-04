@@ -1,8 +1,6 @@
 import streamlit as st
-import sqlite3
 import pandas as pd
 import plotly.express as px
-
 # ==========================================
 # CONFIGURAÇÃO
 # ==========================================
@@ -77,21 +75,41 @@ footer {
 # BANCO
 # ==========================================
 
-conn = sqlite3.connect(
-    "database/radio107.db"
-)
+# ==========================================
+# BANCO SUPABASE
+# ==========================================
 
-df = pd.read_sql_query(
-    "SELECT * FROM musicas",
-    conn
-)
+from supabase_db import supabase
 
-conn.close()
+dados = []
 
-st.write("TOTAL REGISTROS BANCO:", len(df))
-st.write("ULTIMO REGISTRO:", df.iloc[-1]["artista"], "-", df.iloc[-1]["musica"])
-st.write("ULTIMO TIMESTAMP:", df.iloc[-1]["timestamp"])
+inicio = 0
+lote = 1000
 
+while True:
+
+    resposta = (
+        supabase
+        .table("musicas")
+        .select("*")
+        .order("timestamp", desc=False)
+        .range(
+            inicio,
+            inicio + lote - 1
+        )
+        .execute()
+    )
+
+    if len(resposta.data) == 0:
+        break
+
+    dados.extend(
+        resposta.data
+    )
+
+    inicio += lote
+
+df = pd.DataFrame(dados)
 if len(df) == 0:
 
     st.warning(
@@ -100,6 +118,19 @@ if len(df) == 0:
 
     st.stop()
 
+st.write("TOTAL REGISTROS BANCO:", len(df))
+
+st.write(
+    "ULTIMO REGISTRO:",
+    df.iloc[-1]["artista"],
+    "-",
+    df.iloc[-1]["musica"]
+)
+
+st.write(
+    "ULTIMO TIMESTAMP:",
+    df.iloc[-1]["timestamp"]
+)
 # ==========================================
 # FILTRO GOSPEL
 # ==========================================

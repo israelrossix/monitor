@@ -1,10 +1,14 @@
 import sqlite3
 from datetime import datetime, timedelta
 
+from supabase_db import supabase
+
 DB_PATH = "database/radio107.db"
+
 
 def conectar():
     return sqlite3.connect(DB_PATH)
+
 
 def criar_tabela():
 
@@ -26,6 +30,7 @@ def criar_tabela():
     conn.commit()
     conn.close()
 
+
 def definir_periodo(hora):
 
     hora = int(hora)
@@ -40,6 +45,7 @@ def definir_periodo(hora):
         return "Tarde"
 
     return "Noite"
+
 
 def musica_ja_existe(musica, artista):
 
@@ -66,6 +72,7 @@ def musica_ja_existe(musica, artista):
 
     return resultado is not None
 
+
 def salvar_musica(musica, artista):
 
     if musica_ja_existe(musica, artista):
@@ -75,15 +82,12 @@ def salvar_musica(musica, artista):
     agora = datetime.now()
 
     data = agora.strftime("%Y-%m-%d")
-
     horario = agora.strftime("%H:%M:%S")
-
     periodo = definir_periodo(agora.strftime("%H"))
-
     timestamp = agora.strftime("%Y-%m-%d %H:%M:%S")
 
+    # SQLite
     conn = conectar()
-
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -106,11 +110,34 @@ def salvar_musica(musica, artista):
     ))
 
     conn.commit()
-
     conn.close()
+
+    # Supabase
+    try:
+
+        supabase.table(
+            "musicas"
+        ).insert({
+            "musica": musica,
+            "artista": artista,
+            "data": data,
+            "horario": horario,
+            "periodo": periodo,
+            "timestamp": timestamp
+        }).execute()
+
+        print("✅ Gravado no Supabase")
+
+    except Exception as erro:
+
+        print(
+            f"Erro Supabase: {erro}"
+        )
+
 
 def criar_tabela_se_nao_existir():
     criar_tabela()
+
 
 if __name__ == "__main__":
     criar_tabela()
