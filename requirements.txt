@@ -3,6 +3,3 @@ pandas
 plotly
 Pillow
 supabase
-acrcloud
-shazamio
-acrcloud
