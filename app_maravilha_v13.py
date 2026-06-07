@@ -250,7 +250,14 @@ df = df[
 # INDICADORES
 # ==========================================
 
-hoje = pd.Timestamp.now().date()
+# Usa a data do último registro do banco
+# evitando problemas de timezone do servidor
+
+hoje = (
+    df["timestamp"]
+    .max()
+    .date()
+)
 
 df_hoje = df[
     df["timestamp"].dt.date == hoje
