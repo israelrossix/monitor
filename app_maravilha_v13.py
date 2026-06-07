@@ -1,6 +1,30 @@
 import streamlit as st
 import pandas as pd
+import io
 import plotly.express as px
+
+
+# ==========================================
+# EXPORTAR EXCEL
+# ==========================================
+
+def gerar_excel(df):
+
+    buffer = io.BytesIO()
+
+    with pd.ExcelWriter(
+        buffer,
+        engine="openpyxl"
+    ) as writer:
+
+        df.to_excel(
+            writer,
+            index=False,
+            sheet_name="Banco_Completo"
+        )
+
+    return buffer.getvalue()
+
 # ==========================================
 # CONFIGURAÇÃO
 # ==========================================
@@ -816,3 +840,22 @@ Desenvolvido por Israel Rossi Alves
 """,
 unsafe_allow_html=True
 )
+
+
+# ==========================================
+# EXPORTAÇÃO EXCEL
+# ==========================================
+
+st.markdown("---")
+
+st.subheader("⬇ Exportação")
+
+excel_data = gerar_excel(df)
+
+st.download_button(
+    label="📊 Baixar Banco Completo Excel",
+    data=excel_data,
+    file_name="Banco_Completo_Radio107.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+
