@@ -392,9 +392,28 @@ with c4:
 # PRODUÇÃO POR HORA
 # ==========================================
 
-st.markdown("## 📊 Produção Musical por Hora")
+col_titulo_hora, col_filtro_hora = st.columns([4,1])
 
-hora_df = df_hoje.copy()
+with col_titulo_hora:
+    st.markdown("## 📊 Produção Musical por Hora")
+
+with col_filtro_hora:
+
+    datas_disponiveis = sorted(
+        df["timestamp"].dt.date.unique(),
+        reverse=True
+    )
+
+    dia_hora = st.selectbox(
+        "",
+        datas_disponiveis,
+        index=0,
+        key="dia_hora"
+    )
+
+hora_df = df[
+    df["timestamp"].dt.date == dia_hora
+].copy()
 
 if len(hora_df) > 0:
 
