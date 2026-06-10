@@ -297,6 +297,23 @@ ultima_gravacao = (
     .max()
 )
 
+
+
+# ==========================================
+# MÉDIA POR FAIXA HORÁRIA
+# ==========================================
+
+madrugada = df[df["periodo"] == "Madrugada"]
+manha = df[df["periodo"] == "Manhã"]
+tarde = df[df["periodo"] == "Tarde"]
+noite = df[df["periodo"] == "Noite"]
+
+media_madrugada = round(len(madrugada) / 6, 1) if len(madrugada) else 0
+media_manha = round(len(manha) / 6, 1) if len(manha) else 0
+media_tarde = round(len(tarde) / 6, 1) if len(tarde) else 0
+media_noite = round(len(noite) / 6, 1) if len(noite) else 0
+
+
 status_monitor = "ONLINE"
 
 ultima_atualizacao = (
@@ -858,4 +875,34 @@ st.download_button(
     file_name="Banco_Completo_Radio107.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+
+
+
+st.markdown("## 🕒 Produção Musical por Faixa Horária")
+
+f1,f2,f3,f4 = st.columns(4)
+
+with f1:
+    st.metric(
+        "🌙 Madrugada",
+        f"{media_madrugada} mús/h"
+    )
+
+with f2:
+    st.metric(
+        "🌅 Manhã",
+        f"{media_manha} mús/h"
+    )
+
+with f3:
+    st.metric(
+        "☀️ Tarde",
+        f"{media_tarde} mús/h"
+    )
+
+with f4:
+    st.metric(
+        "🌙 Noite",
+        f"{media_noite} mús/h"
+    )
 
