@@ -27,6 +27,8 @@ ultima_musica = ""
 ultimo_artista = ""
 ultima_identificacao = 0
 
+CACHE_MUSICA_SEGUNDOS = 300
+
 FALHAS_ACR = 0
 MAX_FALHAS_ACR = 5
 
@@ -206,7 +208,22 @@ while True:
 
             atual = f"{musica} - {artista}"
 
-            if atual != ultima_musica:
+            agora_cache = time.time()
+
+            if (
+                atual == ultima_musica
+                and
+                (
+                    agora_cache -
+                    ultima_identificacao
+                ) < CACHE_MUSICA_SEGUNDOS
+            ):
+
+                log(
+                    "🔁 Música em cache (5 min)"
+                )
+
+            else:
 
                 if audio_valido(musica, artista):
 
@@ -225,13 +242,13 @@ while True:
 
                 ultima_musica = atual
 
+                ultima_identificacao = (
+                    agora_cache
+                )
+
                 log(
                     f"✅ {origem} | {musica} - {artista}"
                 )
-
-            else:
-
-                log("🔁 Música repetida")
 
         else:
 
