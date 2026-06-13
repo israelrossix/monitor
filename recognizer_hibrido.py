@@ -8,7 +8,8 @@ from datetime import datetime
 from shazamio import Shazam
 from acrcloud.recognizer import ACRCloudRecognizer
 
-from database import salvar_musica
+from database import salvar_musica, salvar_audio_bloqueado
+from filtro_gospel import audio_valido
 
 from acrcloud_config import (
     ACR_HOST,
@@ -22,6 +23,16 @@ PASTA_TEMP = "audio_temp"
 os.makedirs(PASTA_TEMP, exist_ok=True)
 
 ultima_musica = ""
+
+ultimo_artista = ""
+ultima_identificacao = 0
+
+FALHAS_ACR = 0
+MAX_FALHAS_ACR = 5
+
+COOLDOWN_ACR = 300
+
+ultima_consulta_acr = 0
 
 acr = ACRCloudRecognizer({
     "host": ACR_HOST,
@@ -136,15 +147,58 @@ while True:
 
             origem = "SHAZAM"
 
+            FALHAS_ACR = 0
+
         else:
 
-            log("🔍 Consultando ACRCloud...")
+            agora = time.time()
 
-            identificado = reconhecer_acrcloud(
-                arquivo
+            pode_consultar_acr = (
+                agora - ultima_consulta_acr
+                > COOLDOWN_ACR
             )
 
-            origem = "ACRCLOUD"
+            if pode_consultar_acr:
+
+                log("🔍 Consultando ACRCloud...")
+
+                identificado = reconhecer_acrcloud(
+                    arquivo
+                )
+
+                ultima_consulta_acr = agora
+
+                if identificado:
+
+                    origem = "ACRCLOUD"
+
+                    FALHAS_ACR = 0
+
+                else:
+
+                    FALHAS_ACR += 1
+
+                    log(
+                        f"⚠️ Falha ACRCloud ({FALHAS_ACR})"
+                    )
+
+                    if FALHAS_ACR >= MAX_FALHAS_ACR:
+
+                        ultima_consulta_acr = (
+                            time.time()
+                        )
+
+                        log(
+                            "🛑 Cooldown ACRCloud ativado"
+                        )
+
+            else:
+
+                log(
+                    "⏳ Cooldown ACRCloud ativo"
+                )
+
+                identificado = None
 
         if identificado:
 
@@ -154,10 +208,20 @@ while True:
 
             if atual != ultima_musica:
 
-                salvar_musica(
-                    musica,
-                    artista
-                )
+                if audio_valido(musica, artista):
+
+                    salvar_musica(
+                        musica,
+                        artista
+                    )
+
+                else:
+
+                    log(
+                        f"🚫 NÃO GOSPEL | {artista}"
+                    )
+
+                    continue
 
                 ultima_musica = atual
 
@@ -178,9 +242,17 @@ while True:
 
         tempo_gasto = time.time() - inicio
 
+        if identificado:
+
+            intervalo_base = 90
+
+        else:
+
+            intervalo_base = 30
+
         espera = max(
             0,
-            60 - tempo_gasto
+            intervalo_base - tempo_gasto
         )
 
         log(
